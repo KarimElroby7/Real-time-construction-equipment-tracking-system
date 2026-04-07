@@ -318,67 +318,19 @@ an excavator is productive when it is operating, while a dump truck is productiv
 
 ## Challenges & Solutions
 
-The following table summarizes the principal technical challenges encountered during implementation, their root causes, and the engineering decisions adopted to resolve them.
-
-| Challenge | Root Cause | Solution | Trade-offs |
-|-----------|------------|----------|------------|
-| Identity switching between excavators and dump trucks under occlusion. | BoT-SORT's appearance Re-ID is weak for visually similar heavy equipment; transient confidence drops cause tracks to re-spawn with new IDs. | Custom tracker wrapper with persistent friendly IDs, greedy spatial ID locking, and geometric Re-ID fallback using position and size similarity. | Adds per-frame matching overhead; `lock_distance` requires per-camera tuning. |
-| Class flicker — objects oscillating between `excavator` and `dump_truck` across frames. | YOLO misclassifies visually similar equipment under partial occlusion, propagating into downstream logic. | Class voting with a majority-vote warmup phase; the dominant class is permanently locked after `class_lock_threshold` frames. | Locked classes cannot be corrected later; wrong locks require a track reset. |
-| `LOADING` false negatives when trucks and excavators were close but not overlapping. | Initial proximity logic used IoU, which is zero unless boxes intersect — too restrictive for realistic loading scenes. | Replaced IoU with Euclidean center-to-center distance, gated on the nearest *active* excavator and a configurable `loading_distance` threshold. | Threshold is camera- and zoom-dependent; no single global value generalizes. |
-| Spurious optical-flow magnitude on stationary excavators producing false `ACTIVE` states. | Farneback dense flow over the full bbox captures background pixels and arm-tip jitter, yielding non-zero averages on idle frames. | Empirically tuned per-class magnitude thresholds plus a motion-source classifier (`static` / `arm only` / `full body`) over magnitude bands. | Thresholds are dataset-dependent; very slow motion may be classified as static. |
-| Class-agnostic utilization formula produced misleadingly low values for dump trucks. | Productive time semantics differ by class: excavators are productive when moving, dump trucks when being loaded (i.e., stationary). | Class-aware utilization in `TimeAnalyzer.get_stats()`: excavator uses `active_time / total_time`, dump truck uses `loading_time / total_time`; UI labels adapt accordingly. | The `utilization` field carries class-conditional semantics and must be interpreted alongside `equipment_class`. |
-| Frame-level analytics output grew unboundedly for long videos, slowing the final shutdown write. | All per-frame detections were accumulated in memory and serialized in one operation, yielding linear growth with video length. | Split persistence into a compact `analytics.json` (status + summary, atomic write) and a larger best-effort `analytics_full.json` written afterward; the UI never blocks on the larger file. | The full frame list is still held in memory; multi-hour streams require further refactoring. |
-| The dashboard intermittently read truncated `analytics.json` during pipeline writes. | `json.dump()` is non-atomic on Windows; concurrent readers could observe a half-written document. | Atomic write helper using a temporary file → `flush()` → `fsync()` → `os.replace()`; reader retries with structural validation (trailing-brace check). | Marginal disk overhead per write; the atomic rename is single-filesystem only. |
-| Pipeline subprocess was force-killed before its `finally` block could persist analytics. | The orchestrator's shutdown handler called `terminate()` immediately on exit, racing the in-progress write. | Orchestrator now `wait()`s on the pipeline for up to 30 s before any forced termination; the pipeline writes analytics *before* any OpenCV or Kafka cleanup. | Adds a 30 s grace period to shutdown; truly wedged pipelines are still force-killed after the timeout. |
-| `cv2.destroyAllWindows()` deadlocked the shutdown path on Windows. | OpenCV's Win32 window teardown can hang when invoked after Streamlit and Kafka have torn down their event loops. | Reordered the `finally` block so analytics persistence and Kafka flushing complete before OpenCV cleanup. | Window cleanup is now best-effort; the OpenCV window may persist briefly if teardown stalls. |
-| TimescaleDB `INSERT` statements failed with `NOT NULL` violations on `time` and `motion_source`. | The `INSERT` omitted the `time` column relying on `DEFAULT NOW()` against a non-nullable column; `dict.get("motion_source", "")` returns `None` when the key exists with a `None` value. | Include `time` explicitly with a `datetime.now(timezone.utc)` fallback; coerce `None` via `obj.get("motion_source") or ""`. | None. |
-| Child processes leaked when the orchestrator was terminated on Windows. | `subprocess.terminate()` signals only the immediate child, not its descendants; `psutil` is not guaranteed to be installed. | `kill_proc_tree()` helper prefers `psutil.Process.children(recursive=True)` and falls back to `taskkill /F /T /PID` on Windows. | The fallback is Windows-specific and would require adaptation for UNIX-only deployments. |
-| Streamlit duplicate-element errors and race-condition rendering (showing `processing` and `completed` simultaneously). | The original UI used a `while True` polling loop; Streamlit re-executes the script on every interaction, producing concurrent render passes with duplicate widget keys. | Refactored to a single-pass render model: read state once, render once, then trigger `st.rerun()` after a sleep interval while still processing. All transient state migrated to `st.session_state`. | Status transitions incur ~1 s latency, equal to one rerun cycle. |
-
+| Challenge                                     | Root Cause                                  | Solution                                                      | Trade-offs                                                      |
+| --------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------- | --------------------------------------------------------------- |
+| Identity switching under occlusion            | Weak Re-ID + visually similar equipment     | Custom tracker with spatial/geometric ID matching             | Requires per-camera tuning                                      |
+| Class flickering (`excavator` ↔ `dump_truck`) | Model confusion under occlusion             | Majority voting + class locking after threshold               | Wrong locks require track reset                                 |
+| Missed `LOADING` events                       | IoU too restrictive for realistic scenarios | Switched to center-distance metric                            | Threshold sensitive to camera setup                             |
+| False motion detection                        | Optical flow noise on stationary objects    | Class-specific motion thresholds + motion-type classification | Very slow motion may be misclassified                           |
+| Misleading utilization metrics                | Same formula applied across equipment types | Class-aware utilization (movement vs loading)                 | Must interpret results according to equipment class             |
+| Memory / scalability issues                   | Storing all frames in memory                | Split summary vs full data files                              | Full data still in memory; optimization needed for long streams |
 ---
 
-## 🔮 Future Improvements
-
-- 🧠 Smarter LOADING detection (distance + bucket motion + scene context)
-- ⚡ Real-time Kafka → UI streaming (eliminate JSON polling)
-- 📷 Multi-camera support and cross-camera ID handoff
-- 📊 Advanced metrics (cycle time, loads per hour, fleet efficiency)
-- 🤖 Model optimization with TensorRT / ONNX
-- 🏗️ Support for additional equipment classes (loaders, bulldozers, cranes)
-
----
-
-## 🏆 Highlights
-
-- End-to-end AI system: **Detection → Tracking → Activity → Analytics → UI**
-- Production-grade architecture with modular, testable components
-- Class-aware utilization that reflects real construction workflows
-- Graceful shutdown guarantees analytics persistence
-- Single-command launch of the entire stack
-
----
-
-## 📌 Notes
-
-- Optimized for typical construction site camera setups
-- Tracking quality depends on camera angle, resolution, and lighting
-- The loading distance threshold should be tuned per dataset / camera zoom
-- Excavator detection benefits from higher-confidence thresholds than dump trucks
-
----
 
 ## 📄 License
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
----
 
-## 👨‍💻 Author
-
-Built as a real-world AI system for construction equipment monitoring and analytics.
-
----
-
-## ⭐ If you like this project
-
-Give it a star ⭐ and feel free to open issues or contribute!
