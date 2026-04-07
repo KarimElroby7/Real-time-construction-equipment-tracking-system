@@ -14,7 +14,7 @@ Eagle Vision detects, tracks, and analyzes excavators and dump trucks from video
 ## 🎥 Demo
 
 ![Tracking Demo](assets/demo_tracking.gif)
-
+---------------------------------------------------
 ![Tracking2 Demo](assets/demo_tracking2.gif)
 
 ---
