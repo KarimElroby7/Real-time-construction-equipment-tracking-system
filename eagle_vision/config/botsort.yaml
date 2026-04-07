@@ -1,0 +1,31 @@
+# BoT-SORT tracker config for Eagle Vision
+# Tuned for 2-equipment scenes: prioritize ID stability over new-track speed
+
+tracker_type: botsort
+
+# Association thresholds
+# - High: primary association (only confident detections)
+# - Low: secondary association (keeps existing tracks alive with weak detections)
+# - New: high bar to create a NEW track (prevents spurious ID creation)
+track_high_thresh: 0.6
+track_low_thresh: 0.1
+new_track_thresh: 0.7
+
+# Lost track buffer: frames to keep lost tracks before removal
+# 120 frames = ~4 seconds at 30fps
+track_buffer: 120
+
+# Matching threshold for IoU-based association (stricter = fewer wrong matches)
+match_thresh: 0.85
+
+# Fuse detection confidence with IoU distance
+fuse_score: true
+
+# Global Motion Compensation — handles camera movement
+gmc_method: sparseOptFlow
+
+# Appearance-based Re-ID
+with_reid: true
+proximity_thresh: 0.5
+appearance_thresh: 0.5
+model: auto

@@ -1,0 +1,37 @@
+{
+  "status": "completed",
+  "video_info": {
+    "source": "input/sample.mp4",
+    "total_frames": 14893,
+    "fps": 29.97
+  },
+  "summary": {
+    "EX-001": {
+      "equipment_class": "excavator",
+      "total_time": 147.71,
+      "active_time": 135.1,
+      "idle_time": 12.61,
+      "loading_time": 0.0,
+      "utilization": 0.9146,
+      "loading_ratio": 0.0
+    },
+    "TR-001": {
+      "equipment_class": "dump_truck",
+      "total_time": 114.68,
+      "active_time": 23.26,
+      "idle_time": 91.42,
+      "loading_time": 100.33,
+      "utilization": 0.8749,
+      "loading_ratio": 0.8749
+    },
+    "TR-002": {
+      "equipment_class": "dump_truck",
+      "total_time": 6.37,
+      "active_time": 6.37,
+      "idle_time": 0.0,
+      "loading_time": 2.07,
+      "utilization": 0.3246,
+      "loading_ratio": 0.3246
+    }
+  }
+}

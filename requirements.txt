@@ -1,0 +1,36 @@
+# ═══════════════════════════════════════════════════════════
+# Eagle Vision — Python Dependencies
+# Install with:  pip install -r requirements.txt
+# ═══════════════════════════════════════════════════════════
+
+# ── Computer Vision: detection, tracking, motion ─────────
+torch>=2.0.0
+torchvision>=0.15.0
+ultralytics>=8.0.0
+supervision>=0.18.0
+lap>=0.4.0
+opencv-python>=4.8.0
+numpy>=1.24.0
+
+# ── Streaming & messaging ────────────────────────────────
+kafka-python>=2.0.2
+
+# ── Backend API ──────────────────────────────────────────
+fastapi>=0.100.0
+uvicorn>=0.23.0
+websockets>=11.0
+requests>=2.31.0
+
+# ── Database (TimescaleDB / Postgres) ────────────────────
+psycopg2-binary>=2.9.0
+sqlalchemy>=2.0.0
+
+# ── Dashboard (Streamlit) ────────────────────────────────
+streamlit>=1.28.0
+pandas>=2.0.0
+
+# ── Process management ───────────────────────────────────
+psutil>=5.9.0
+
+# ── Configuration ────────────────────────────────────────
+python-dotenv>=1.0.0

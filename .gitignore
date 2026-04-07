@@ -1,0 +1,125 @@
+# ─────────────────────────────────────────────────────────────
+# Eagle Vision — .gitignore
+# ─────────────────────────────────────────────────────────────
+
+# ── Secrets & Environment ────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+credentials.json
+secrets.json
+
+# ── Python ───────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ── Virtual environments ─────────────────────────────────────
+venv/
+env/
+ENV/
+.venv/
+.virtualenv/
+
+# ── Testing & coverage ───────────────────────────────────────
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+
+# ── IDEs & editors ───────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Jupyter ──────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ── Eagle Vision: large media (videos) ───────────────────────
+eagle_vision/input/*.mp4
+eagle_vision/input/*.mov
+eagle_vision/input/*.avi
+eagle_vision/input/*.mkv
+eagle_vision/output/*.mp4
+eagle_vision/output/*.mov
+eagle_vision/output/*.avi
+eagle_vision/output/*.mkv
+
+# ── Eagle Vision: model weights ──────────────────────────────
+*.pt
+*.pth
+*.onnx
+*.engine
+*.weights
+*.h5
+
+# ── Eagle Vision: datasets ───────────────────────────────────
+eagle_vision/dataset/raw_frames/
+eagle_vision/dataset/selected_frames/
+eagle_vision/dataset/**/*.jpg
+eagle_vision/dataset/**/*.jpeg
+eagle_vision/dataset/**/*.png
+
+# ── Eagle Vision: generated outputs ──────────────────────────
+eagle_vision/output/analytics.json
+eagle_vision/output/analytics_full.json
+eagle_vision/output/*.json
+eagle_vision/output/*.tmp
+*.tmp
+
+# Allow the committed sample file through
+!eagle_vision/output/analytics.sample.json
+
+# ── Runtime / state files ────────────────────────────────────
+stop.flag
+*.pid
+*.lock
+
+# ── Logs ─────────────────────────────────────────────────────
+*.log
+logs/
+log/
+
+# ── Database / Docker volumes ────────────────────────────────
+postgres_data/
+kafka_data/
+zookeeper_data/
+*.sqlite
+*.db
+
+# ── Claude / agent context ───────────────────────────────────
+.claude/
+CLAUDE.md
+**/CLAUDE.md
